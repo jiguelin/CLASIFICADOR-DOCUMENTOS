@@ -1,8 +1,0 @@
-streamlit
-anthropic
-pdf2image
-pymupdf
-pandas
-openpyxl
-python-dateutil
-Pillow
