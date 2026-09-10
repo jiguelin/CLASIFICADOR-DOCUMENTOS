@@ -1,0 +1,7 @@
+streamlit
+anthropic
+PyMuPDF
+pandas
+openpyxl
+lxml
+reportlab
