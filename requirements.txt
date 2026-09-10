@@ -1,6 +1,0 @@
-streamlit
-lxml
-reportlab
-pandas
-openpyxl
-anthropic
