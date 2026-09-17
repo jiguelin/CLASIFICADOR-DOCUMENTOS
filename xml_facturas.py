@@ -113,25 +113,148 @@ RUCS_RESTAURANTES = {
     '20424024268': 'Bembos', '20613563700': 'Pardos Chicken', '20563571498': 'Norkys', '20607085600': 'Popeyes',
     '20602122779': 'Little Caesars Pizza', '20600193342': 'EHJ Inversiones (Consumo)', '20100315751': 'Haiti Miraflores',
     '20386489263': 'Inversiones Reixa - Delicass', '20603010524': 'Tere Stabile', '10078403816': 'Zavaleta Zavaleta Rosa Cerolinda (Restaurante)',
-    '20127765279': 'Coesti S.A. (Tienda Conveniencia Primax)', '20521370042': 'Eterno Retorno SAC', '20537230399': 'Inversiones SAP - Don Tito',
+    '20521370042': 'Eterno Retorno SAC', '20537230399': 'Inversiones SAP - Don Tito',
     '20553689962': 'Taller 109 SRL (Heladeria)',
+    # --- Operadores de franquicias de comida (la razón social no dice "restaurante") ---
+    '20100123330': 'Delosi S.A. (KFC / Pizza Hut / Starbucks / Burger King)',
+    '20101869947': 'Alert del Peru S.A.C. (China Wok)',
+    '20376289215': 'Operaciones Arcos Dorados de Peru S.A. (McDonalds)',
+    '20605254315': 'Saidel S.A.C. (Burger King)',
+    '20612459810': 'Pinkdel S.A.C. (Pinkberry)',
+    '20298674611': 'Franquicias Alimentarias S.A. (Fridays)',
+    '20600686691': 'DPP Corp S.A. (Pizzas - Papa Johns)',
+    '20506199825': 'Embutidos Zimmermann (Sangucheria / Consumo)',
+}
+# Emisores MIXTOS: venden combustible Y comida/tienda de conveniencia en el mismo local.
+# No se pueden fijar por RUC: se decide por la descripción de los ítems.
+# Formato: RUC: (nombre, categoria_por_defecto_si_la_descripcion_no_es_clara)
+RUCS_MIXTO_GRIFO = {
+    '20503840121': ('Repsol Comercial S.A.C. (grifo + tienda)', 'combustible_peaje'),
+    '20127765279': ('Coesti S.A. (grifo Primax + tienda Listo)', 'restaurante_consumo'),
 }
 RUCS_SEGUROS = {'20504262242': 'Rimac', '20552083401': 'Pacifico Seguros', '20608644467': 'La Positiva', '20100036773': 'Mapfre'}
 RUCS_SERVICIOS_PUBLICOS = {'20331898008': 'Luz del Sur', '20467534026': 'Claro', '20106253251': 'Movistar', '20602235914': 'Entel', '20100167628': 'Sedapal'}
 RUCS_BIENES = {'20512002090': 'Mifarma', '20100579228': 'Pareja Lecaros', '20602457029': 'Rigodent / Medical Dental', '20601096022': 'Fresh Life',
                '20100128056': 'Saga Falabella'}
-RUCS_SERVICIOS = {'20544547756': 'Despegar.com Peru'}
+RUCS_SERVICIOS = {'20544547756': 'Despegar.com Peru',
+                  '20100960495': 'Lavanderia Saori S.A.'}
 
 # Palabras clave para categoría por reglas (se evalúan sobre las descripciones de ítems)
 _KW_COMBUSTIBLE = ('GASOHOL', 'DIESEL', 'GASOLINA', 'GLP', 'GNV', 'PETROLEO', 'COMBUSTIBLE', 'PEAJE', 'PREMIUM 9', 'REGULAR 9')
 _KW_SEGURO = ('SEGURO', 'POLIZA', 'PÓLIZA', 'SCTR', 'EPS ', 'VIDA LEY', 'PRIMA ')
-_KW_RESTAURANTE = ('MENU', 'MENÚ', 'ALMUERZO', 'CENA', 'DESAYUNO', 'LOMO SALTADO', 'CEVICHE', 'POLLO A LA BRASA', 'HAMBURGUESA', 'PIZZA',
-                   'CHILCANO', 'PISCO SOUR', 'CAFE ', 'CAFÉ ', 'CAPPUCCINO', 'LATTE', 'SANDWICH', 'SÁNDWICH', 'CONSUMO', 'PLATO', 'ENTRADA', 'POSTRE', 'JUGO ')
+# Comida y bebida preparada = consumo en el local (aunque la factura liste "productos con cantidad").
+_KW_RESTAURANTE = (
+    # comidas / menú
+    'MENU', 'MENÚ', 'ALMUERZO', 'CENA', 'DESAYUNO', 'LUNCH', 'BRUNCH', 'CONSUMO', 'PLATO', 'ENTRADA', 'POSTRE', 'GUARNICION', 'PORCION', 'POTAJE',
+    # peruana / criolla / chifa
+    'LOMO SALTADO', 'CEVICHE*', 'TIRADITO*', 'CAUSA', 'AJI DE GALLINA', 'ANTICUCHO*', 'CHICHARRON*', 'POLLO A LA BRASA', 'BROASTER', 'PIEZA DE POLLO',
+    'CHAUFA*', 'WANTAN', 'CHIJAUKAY', 'TALLARIN SALTADO', 'AEROPUERTO', 'MOSTRITO', 'SOPA*', 'CALDO*', 'PARRILL*', 'ENSALADA*',
+    # fast food
+    'HAMBURGUESA*', 'BURGER*', 'WHOPPER', 'CHEESEBURGER', 'NUGGETS', 'ALITAS', 'COMBO*', 'TACO*', 'BURRITO*', 'WRAP', 'HOT DOG',
+    'SANDWICH*', 'SÁNDWICH*', 'SANGUCHE*', 'TEQUEÑ*', 'EMPANADA*',
+    # pizza
+    'PIZZA*', 'BORDE QUESO', 'BORDE DE QUESO', 'CALZONE',
+    # dulces / heladería / cafetería
+    'HELADO*', 'YOGURT*', 'FROZEN', 'MILKSHAKE*', 'MILK SHAKE', 'WAFFLE*', 'CREPE*', 'BROWNIE*', 'CHURRO*', 'DONUT*', 'MUFFIN*', 'CROISSANT*', 'MEDIALUNA*',
+    'CAFE ', 'CAFÉ ', 'CAPPUCCINO', 'LATTE', 'ESPRESSO', 'EXPRESO', 'FRAPPE', 'INFUSION',
+    # bebidas de consumo inmediato
+    'COCA COLA', 'COCA-COLA', 'INKA COLA', 'INCA KOLA', 'PEPSI', 'SPRITE', 'FANTA', 'GASEOSA', 'LIMONADA', 'CHICHA', 'REFRESCO', 'JUGO ',
+    'CHILCANO', 'PISCO SOUR', 'MOJITO', 'CERVEZA',
+)
 _KW_SERVICIO = ('SERVICIO', 'ALQUILER', 'ARRENDAMIENTO', 'MANTENIMIENTO', 'CONSULTORIA', 'CONSULTORÍA', 'ASESORIA', 'ASESORÍA', 'HONORARIO',
                 'TRANSPORTE', 'FLETE', 'INTERNET', 'PUBLICIDAD', 'LICENCIA', 'SUSCRIPCION', 'SUSCRIPCIÓN', 'HOSPEDAJE', 'ALOJAMIENTO', 'PASAJE',
                 'COMISION', 'COMISIÓN', 'INSTALACION', 'INSTALACIÓN', 'REPARACION', 'REPARACIÓN', 'CAPACITACION', 'CAPACITACIÓN', 'SOPORTE',
                 'HOSTING', 'DOMINIO', 'LIMPIEZA', 'SEGURIDAD', 'VIGILANCIA', 'CONTABLE', 'LABORAL', 'LEGAL', 'AUDITORIA', 'AUDITORÍA', 'MEMBRESIA',
-                'MEMBRESÍA', 'CUOTA', 'ENVIO', 'ENVÍO', 'COURIER', 'DELIVERY', 'ESTACIONAMIENTO', 'PARQUEO', 'PLAN ', 'TASA')
+                'MEMBRESÍA', 'CUOTA', 'ENVIO', 'ENVÍO', 'COURIER', 'DELIVERY', 'ESTACIONAMIENTO', 'PARQUEO', 'PLAN ', 'TASA',
+                'LAVADO', 'LAVANDERIA', 'LAVANDERÍA', 'PLANCHADO', 'TINTORERIA', 'TINTORERÍA')
+# Servicios empresariales inequívocos: si aparecen, NO se reclasifica a restaurante
+# aunque la descripción tenga alguna palabra de comida (ej. "servicio de catering mensual").
+_KW_SERVICIO_FUERTE = ('ALQUILER', 'ARRENDAMIENTO', 'CONSULTORIA', 'CONSULTORÍA', 'ASESORIA', 'ASESORÍA', 'AUDITORIA', 'AUDITORÍA', 'HONORARIO',
+                       'INTERMEDIACION', 'INTERMEDIACIÓN', 'TERCERIZACION', 'TERCERIZACIÓN', 'FLETE', 'TRANSPORTE DE CARGA', 'PUBLICIDAD',
+                       'LICENCIA', 'HOSTING', 'DOMINIO', 'SUSCRIPCION', 'SUSCRIPCIÓN', 'VIGILANCIA', 'CONTABLE', 'PLANILLA', 'DESTAQUE DE PERSONAL')
+
+# ---------- Marcas / palabras en la RAZÓN SOCIAL o NOMBRE COMERCIAL ----------
+# Muchas franquicias facturan con una razón social que no dice nada ("DELOSI S.A.",
+# "SAIDEL S.A.C."), pero el nombre comercial sí ("KFC", "BURGER KING"). Se busca en ambos.
+_MARCAS_RESTAURANTE = (
+    'KFC', 'BURGER KING', 'MCDONALD*', 'PIZZA HUT', 'PAPA JOHN*', 'DOMINOS', "DOMINO'S", 'SUBWAY', 'STARBUCKS', 'DUNKIN', 'BEMBOS', 'POPEYES',
+    'CHINA WOK', 'CHINAWOK', 'PINKBERRY', 'FRIDAYS', 'TGI', 'NORKY*', 'PARDOS', 'ROKY*', 'OTTO GRILL', 'LA LUCHA', 'TANTA', 'RUSTICA',
+    'MADAM TUSAN', 'CHILIS', "CHILI'S", 'HOOTERS', 'WENDY*', 'TACO BELL', 'LITTLE CAESARS', 'PAPACHOS', 'SEGUNDO MUELLE', 'PUNTO AZUL',
+    'JUAN VALDEZ', 'DELICASS', 'PINKDEL', 'SAIDEL', 'DELOSI', 'ARCOS DORADOS', 'ALERT DEL PERU', 'FRANQUICIAS ALIMENTARIA*',
+)
+_PALABRAS_NOMBRE_RESTAURANTE = (
+    'RESTAURANT*', 'CEVICHERI*', 'POLLERI*', 'CHIFA*', 'PIZZERI*', 'SANGUCHERI*', 'JUGUERI*', 'HELADERI*', 'PASTELERI*', 'PANADERI*',
+    'CAFETERI*', 'PARRILL*', 'GRILL*', 'COFFEE', 'BAKERY', 'FOOD*', 'DELI', 'BAR', 'GASTRONOM*', 'ALIMENTARI*', 'CATERING',
+)
+# Si la razón social dice esto, el emisor vende/distribuye productos: la regla por NOMBRE
+# no debe mandarlo a restaurantes ("IMPORTACIONES DEL CAFE" que vende cafeteras es 'bien').
+# La descripción de los ítems sí sigue mandando, porque es más confiable.
+_PALABRAS_NOMBRE_COMERCIO = (
+    'IMPORTACION*', 'IMPORTADOR*', 'EXPORTACION*', 'DISTRIBUIDOR*', 'COMERCIALIZADOR*', 'MAYORISTA*', 'SUPERMERCADO*', 'HIPERMERCADO*',
+    'FERRETERI*', 'FARMACI*', 'BOTICA*', 'LIBRERI*', 'SUMINISTRO*', 'REPUESTO*', 'MAQUINARIA*',
+)
+_PALABRAS_NOMBRE_SERVICIO = (
+    'LAVANDERI*', 'TINTORERI*', 'LAVASECO*', 'LAUNDRY', 'DRY CLEAN', 'PELUQUERI*', 'BARBERI*', 'ESTACIONAMIENTO*', 'COURIER', 'MENSAJERI*',
+    'CONSULTOR*', 'ASESOR*', 'ABOGADO*', 'CONTADORES', 'INMOBILIARI*', 'VIGILANCIA',
+)
+
+
+def _norm(s: str) -> str:
+    """Mayúsculas sin tildes, para comparar nombres y descripciones."""
+    s = (s or '').upper()
+    for a, b in (('Á', 'A'), ('É', 'E'), ('Í', 'I'), ('Ó', 'O'), ('Ú', 'U'), ('Ü', 'U'), ('Ñ', 'N')):
+        s = s.replace(a, b)
+    return s
+
+
+def _tiene(texto: str, palabras) -> Optional[str]:
+    """Busca cada palabra como palabra completa (evita que CAFE matchee CAFETERA).
+    Si la palabra termina en '*' vale como prefijo: 'POLLERI*' cubre POLLERIA y POLLERIAS.
+    Devuelve la primera coincidencia o None."""
+    t = _norm(texto)
+    for p in palabras:
+        pn = _norm(p).strip()
+        if not pn:
+            continue
+        if pn.endswith('*'):
+            patron = r'(?<![A-Z0-9])' + re.escape(pn[:-1])          # prefijo: admite plural/derivados
+        else:
+            patron = r'(?<![A-Z0-9])' + re.escape(pn) + r'(?![A-Z0-9])'
+        if re.search(patron, t):
+            return p.strip().rstrip('*')
+    return None
+
+
+def categoria_por_nombre_emisor(nombre: str, nombre_comercial: str = '') -> Optional[tuple]:
+    """Regla general por razón social / nombre comercial. Devuelve (categoria, razon) o None."""
+    full = f'{nombre} {nombre_comercial}'.strip()
+    if not full:
+        return None
+    # Una marca reconocida (KFC, DELOSI, BURGER KING) manda siempre.
+    m = _tiene(full, _MARCAS_RESTAURANTE)
+    if m:
+        return 'restaurante_consumo', f'El emisor es un negocio de comida ("{m}" en su nombre)'
+    # Una palabra genérica (GRILL, FOOD, BAR) solo si no es un comercio de productos.
+    m = _tiene(full, _PALABRAS_NOMBRE_RESTAURANTE)
+    if m and not _tiene(full, _PALABRAS_NOMBRE_COMERCIO):
+        return 'restaurante_consumo', f'El emisor es un negocio de comida ("{m}" en su nombre)'
+    m = _tiene(full, _PALABRAS_NOMBRE_SERVICIO)
+    if m:
+        return 'servicio', f'El emisor presta un servicio ("{m}" en su nombre)'
+    return None
+
+
+def categoria_por_descripcion(texto: str) -> Optional[tuple]:
+    """Regla general por descripción de los ítems. Devuelve (categoria, razon) o None.
+    Comida/bebida preparada manda sobre 'bien' y sobre 'servicio' genérico."""
+    if not texto:
+        return None
+    if _tiene(texto, _KW_COMBUSTIBLE):
+        return 'combustible_peaje', 'Descripción de combustible o peaje'
+    m = _tiene(texto, _KW_RESTAURANTE)
+    if m and not _tiene(texto, _KW_SERVICIO_FUERTE):
+        return 'restaurante_consumo', f'Alimentos/bebidas de consumo inmediato ("{m}")'
+    return None
 
 NO_COMPROBANTE = {'guia_remision', 'nota_pedido', 'recibo_servicio', 'documento_autorizado', 'codigo_30', 'otro', 'recibo_honorarios'}
 
@@ -557,6 +680,16 @@ def clasificar(c: Comprobante) -> Comprobante:
     if ruc in RUCS_BIENES:
         c.categoria, c.razon = 'bien', f'RUC conocido ({RUCS_BIENES[ruc]})'
         return c
+    # Emisor mixto (grifo con tienda de conveniencia): decide la descripción, no el RUC
+    if ruc in RUCS_MIXTO_GRIFO:
+        nombre_mix, por_defecto = RUCS_MIXTO_GRIFO[ruc]
+        if _tiene(txt, _KW_COMBUSTIBLE):
+            c.categoria, c.razon = 'combustible_peaje', f'{nombre_mix}: la descripción es combustible/peaje'
+        elif _tiene(txt, _KW_RESTAURANTE):
+            c.categoria, c.razon = 'restaurante_consumo', f'{nombre_mix}: la descripción es comida/bebida de consumo'
+        else:
+            c.categoria, c.razon = por_defecto, f'{nombre_mix}: descripción no concluyente, se usa su categoría habitual'
+        return c
 
     if c.tipo_documento in NO_COMPROBANTE:
         c.categoria = None
@@ -569,12 +702,27 @@ def clasificar(c: Comprobante) -> Comprobante:
         c.razon = 'El XML declara detracción (PaymentTerms/Detraccion o leyenda 2006)'
         return c
 
-    # 3) Heurísticas por descripción / unidad
-    if any(k in txt for k in _KW_COMBUSTIBLE):
+    # 3) Regla general por razón social / nombre comercial del emisor
+    #    (cubre franquicias cuyo nombre legal no dice nada: DELOSI = KFC, SAIDEL = Burger King)
+    por_nombre = categoria_por_nombre_emisor(c.nombre_emisor, c.nombre_comercial)
+
+    # 4) Heurísticas por descripción / unidad
+    if _tiene(txt, _KW_COMBUSTIBLE):
         c.categoria, c.razon = 'combustible_peaje', 'Descripción de combustible o peaje'
         return c
-    if any(k in txt for k in _KW_SEGURO):
+    if _tiene(txt, _KW_SEGURO):
         c.categoria, c.razon = 'seguro', 'Descripción de seguro/póliza'
+        return c
+    # Comida/bebida preparada ANTES que la regla de unidad SERVICIO: muchos restaurantes
+    # (Fridays, cafeterías) emiten sus platos con unidad ZZ = SERVICIO y terminaban en Servicios.
+    comida = categoria_por_descripcion(txt)
+    if comida and comida[0] == 'restaurante_consumo' and len(c.lineas) <= 10:
+        c.categoria, c.razon = comida
+        return c
+    # El nombre del emisor manda solo si los ítems no describen un servicio empresarial
+    # explícito (una empresa de catering que factura "alquiler de vajilla" es servicio).
+    if por_nombre and por_nombre[0] == 'restaurante_consumo' and not _tiene(txt, _KW_SERVICIO_FUERTE):
+        c.categoria, c.razon = por_nombre
         return c
     unidades = {l.unidad for l in c.lineas}
     todo_servicio = bool(c.lineas) and unidades <= {'SERVICIO', ''}
@@ -583,8 +731,10 @@ def clasificar(c: Comprobante) -> Comprobante:
         c.categoria = 'servicio'
         c.razon = 'Ítems con unidad SERVICIO (ZZ) o descripción de servicio'
         return c
-    if any(k in txt for k in _KW_RESTAURANTE) and len(c.lineas) <= 8:
-        c.categoria, c.razon = 'restaurante_consumo', 'Descripción de platos/bebidas preparadas'
+    # El nombre del emisor también decide servicios cuyo ítem parece un producto
+    # (lavandería que factura "BLUSA DE SEDA", peluquería que factura "CORTE", etc.)
+    if por_nombre:
+        c.categoria, c.razon = por_nombre
         return c
     c.categoria = 'bien'
     c.razon = 'Lista de productos con cantidad y precio unitario; sin detracción'
@@ -598,14 +748,15 @@ def afinar_con_claude(c: Comprobante, client, mi_ruc: str = '', model: str = 'cl
     (RUC no conocido y categoría 'bien' / 'servicio' / 'restaurante_consumo')."""
     if c.categoria not in ('bien', 'servicio', 'restaurante_consumo') or c.tiene_detraccion:
         return c
-    if c.ruc_emisor in {**RUCS_BANCOS, **RUCS_COMBUSTIBLE, **RUCS_RESTAURANTES, **RUCS_SEGUROS, **RUCS_BIENES, **RUCS_SERVICIOS}:
+    if c.ruc_emisor in {**RUCS_BANCOS, **RUCS_COMBUSTIBLE, **RUCS_RESTAURANTES, **RUCS_SEGUROS, **RUCS_BIENES, **RUCS_SERVICIOS, **RUCS_MIXTO_GRIFO}:
         return c
     items = '\n'.join(f'- {fmt_qty(l.cantidad)} {l.unidad} {l.descripcion} ({c.simbolo} {fmt(l.valor_venta)})' for l in c.lineas[:30])
     prompt = f"""Eres un contador peruano. Clasifica esta factura de compra en UNA categoría:
-- restaurante_consumo: consumo en restaurante/cafetería/bar/heladería/tienda de conveniencia (platos, bebidas preparadas, menú).
-- bien: productos físicos para abastecer/revender/usar (abarrotes al por mayor, insumos, materiales, equipos).
-- servicio: servicios sin detracción (alquiler, internet, consultoría, transporte, publicidad, mantenimiento, etc.).
+- restaurante_consumo: consumo de comida o bebida preparada para comer en el momento — restaurantes, fast food, cafeterías, bares, heladerías, pizzerías, chifas, food courts y tiendas de conveniencia de grifos. Señales: combos, hamburguesas, pizzas ("familiar borde queso"), chaufa, pollo, tacos, nuggets, helados, cafés, gaseosas (Coca Cola, Inka Cola). ESTO APLICA AUNQUE la factura liste los ítems como productos con cantidad y precio unitario, y AUNQUE la unidad de medida diga SERVICIO: si es comida preparada, es restaurante_consumo, NO 'bien' ni 'servicio'.
+- bien: productos físicos para llevar/revender/abastecer (abarrotes, insumos, materiales, equipos, ropa, calzado).
+- servicio: servicios sin detracción (alquiler, internet, consultoría, transporte, publicidad, mantenimiento, lavandería, tintorería, etc.). Una lavandería que factura "BLUSA DE SEDA" es servicio, no bien: la prenda es del cliente, se cobra el lavado.
 - combustible_peaje, seguro: solo si es evidente.
+Fíjate también en la razón social y el nombre comercial del emisor: muchas franquicias facturan con un nombre legal que no dice nada (DELOSI = KFC, SAIDEL = Burger King, PINKDEL = Pinkberry, ALERT DEL PERU = China Wok, ARCOS DORADOS = McDonald's, FRANQUICIAS ALIMENTARIAS = Fridays) y son restaurante_consumo.
 Emisor: {c.nombre_emisor} (RUC {c.ruc_emisor}). Cliente RUC: {c.doc_cliente or mi_ruc}. Total: {c.simbolo} {fmt(c.importe_total)}.
 Ítems:
 {items}

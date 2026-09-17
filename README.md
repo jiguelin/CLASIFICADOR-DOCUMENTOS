@@ -22,3 +22,28 @@ Misma app de siempre, ahora también acepta **XML de SUNAT**.
 
 ## Agregar RUCs conocidos
 Solo en `xml_facturas.py`, sección "LISTAS DE RUCs CONOCIDOS". `app.py` las importa de ahí.
+
+- `RUCS_MIXTO_GRIFO` es para emisores que venden combustible **y** comida (grifos con tienda,
+  ej. Repsol Comercial, Coesti/Primax). Ahí no manda el RUC sino la descripción del ítem;
+  el segundo valor de la tupla es la categoría por defecto si la descripción no es clara.
+
+## Reglas generales de categoría (aplican a cualquier emisor, esté o no en las listas)
+Están en `xml_facturas.py`, debajo de las listas de RUCs, y las usan tanto los XML como
+las fotos/PDF:
+
+1. **Detracción** declarada → Servicios con Detracción (manda sobre todo lo demás).
+2. **Comida o bebida preparada** en la descripción (`_KW_RESTAURANTE`: combo, hamburguesa,
+   pizza, borde queso, chaufa, tacos, helado, Coca Cola…) → Restaurantes y Consumos.
+   Esto vence a "bien" y también a "servicio": muchos restaurantes (Fridays, cafeterías)
+   facturan sus platos con unidad de medida ZZ = SERVICIO y antes caían en Servicios.
+3. **Nombre del emisor** (`_MARCAS_RESTAURANTE`, `_PALABRAS_NOMBRE_RESTAURANTE`,
+   `_PALABRAS_NOMBRE_SERVICIO`): cubre franquicias cuya razón social no dice nada
+   (DELOSI = KFC, SAIDEL = Burger King, PINKDEL = Pinkberry, ARCOS DORADOS = McDonald's)
+   y servicios que facturan como si fueran productos (una lavandería que factura
+   "BLUSA DE SEDA" cobra el lavado → servicio, no bien).
+4. Salvaguardas: `_KW_SERVICIO_FUERTE` (alquiler, consultoría, flete…) impide que una
+   palabra de comida convierta un servicio empresarial en consumo; `_PALABRAS_NOMBRE_COMERCIO`
+   (importadora, distribuidora, ferretería…) impide que una palabra genérica del nombre
+   mande a restaurantes a un comercio de productos.
+
+Las palabras admiten `*` al final como prefijo: `POLLERI*` cubre POLLERIA y POLLERIAS.
