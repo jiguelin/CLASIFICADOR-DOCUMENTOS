@@ -526,6 +526,7 @@ if st.button("🚀 Clasificar documentos", type="primary", use_container_width=T
                     'Serie / Numero'  : c.serie_numero,
                     'Fecha Emision'   : c.fecha_emision,
                     'Monto Total'     : float(c.importe_total),
+                    '% IGV'           : xf.tasa_igv_texto(c),
                     'IGV'             : float(c.igv),
                     'Tiene IGV'       : c.tiene_igv,
                     'Tiene Detraccion': c.tiene_detraccion,

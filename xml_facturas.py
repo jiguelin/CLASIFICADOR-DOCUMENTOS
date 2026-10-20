@@ -273,6 +273,7 @@ class Linea:
     precio_unitario: Decimal = Decimal(0)  # con IGV (PricingReference 01)
     descuento: Decimal = Decimal(0)
     igv: Decimal = Decimal(0)
+    igv_porcentaje: Decimal = Decimal(0)   # tasa declarada en la línea (18, 10.5...); 0 si no viene
     isc: Decimal = Decimal(0)
     valor_venta: Decimal = Decimal(0)      # LineExtensionAmount
     afectacion: str = ''                   # Catálogo 07: 10 gravado, 20 exonerado, 30 inafecto...
@@ -321,6 +322,11 @@ class Comprobante:
     otros_cargos: Decimal = Decimal(0)
     anticipos: Decimal = Decimal(0)
     igv: Decimal = Decimal(0)
+    # Tasas de IGV del comprobante, tal como las declara el XML (cbc:Percent). Normalmente una
+    # sola: 18 (general) o la tasa reducida de restaurantes/hoteles (ej. 10.5). Si el XML no
+    # trae el porcentaje se calcula IGV / base gravada. Lista vacía = sin IGV.
+    igv_tasas: List[Decimal] = field(default_factory=list)
+    igv_tasa_calculada: bool = False       # True si no vino en el XML y se dedujo de los montos
     isc: Decimal = Decimal(0)
     icbper: Decimal = Decimal(0)
     otros_tributos: Decimal = Decimal(0)
@@ -541,6 +547,7 @@ def parse_xml(path: Path) -> Comprobante:
         c.tiene_percepcion = True
 
     # --- Tributos globales ---
+    tasas_globales = []
     for ts in _all(root, './cac:TaxTotal/cac:TaxSubtotal'):
         nombre = _txt(ts, './cac:TaxCategory/cac:TaxScheme/cbc:Name').upper()
         tid = _txt(ts, './cac:TaxCategory/cac:TaxScheme/cbc:ID')
@@ -550,6 +557,9 @@ def parse_xml(path: Path) -> Comprobante:
             c.igv += monto
             if not c.gravadas:
                 c.gravadas = base
+            pct = _d(_txt(ts, './cac:TaxCategory/cbc:Percent'))
+            if pct > 0 and monto > 0:
+                tasas_globales.append(pct)
         elif nombre == 'ISC' or tid == '2000':
             c.isc += monto
         elif nombre in ('ICBPER',) or tid == '7152':
@@ -625,6 +635,9 @@ def parse_xml(path: Path) -> Comprobante:
             if nombre == 'IGV' or tid == '1000':
                 L.igv += monto
                 L.afectacion = _txt(ts, './cac:TaxCategory/cbc:TaxExemptionReasonCode')
+                pct = _d(_txt(ts, './cac:TaxCategory/cbc:Percent'))
+                if pct > 0 and monto > 0:
+                    L.igv_porcentaje = pct
             elif nombre == 'ISC' or tid == '2000':
                 L.isc += monto
             elif not L.afectacion:
@@ -635,7 +648,64 @@ def parse_xml(path: Path) -> Comprobante:
 
     if not c.gravadas and c.igv:
         c.gravadas = c.valor_venta
+    _resolver_tasas_igv(c, tasas_globales)
     return c
+
+
+def _resolver_tasas_igv(c: Comprobante, tasas_globales: List[Decimal]) -> None:
+    """Decide qué tasa(s) de IGV mostrar. Orden de confianza:
+    1) las tasas declaradas en las líneas (más detalladas: detectan facturas con tasas mixtas),
+    2) la tasa declarada en el total global,
+    3) si el XML no trae ninguna, se calcula IGV / base gravada (y se marca como calculada)."""
+    if c.igv <= 0:
+        c.igv_tasas = []
+        return
+    def unicas(vals):
+        out = []
+        for v in vals:
+            v = _norm_pct(v)
+            if v not in out:
+                out.append(v)
+        return out
+    por_linea = unicas(l.igv_porcentaje for l in c.lineas if l.igv_porcentaje > 0)
+    if por_linea:
+        c.igv_tasas = sorted(por_linea)
+        return
+    if tasas_globales:
+        c.igv_tasas = sorted(unicas(tasas_globales))
+        return
+    if c.gravadas > 0:
+        c.igv_tasas = [_norm_pct(c.igv / c.gravadas * 100, decimales=1)]
+        c.igv_tasa_calculada = True
+
+
+def _norm_pct(v, decimales: int = 2) -> Decimal:
+    """10.50 → 10.5 ; 18.00 → 18 ; 10.4977 (calculada) → 10.5 con decimales=1."""
+    try:
+        return Decimal(v).quantize(Decimal(10) ** -decimales).normalize()
+    except Exception:
+        return Decimal(0)
+
+
+def fmt_pct(v) -> str:
+    """Decimal('18') → '18' ; Decimal('10.5') → '10.5' (sin notación científica)."""
+    try:
+        return f'{Decimal(v).normalize():f}'
+    except Exception:
+        return str(v)
+
+
+def etiqueta_igv(c: Comprobante) -> str:
+    """Texto del renglón de IGV en el PDF: 'IGV (18%)', 'IGV (10.5%)' o 'IGV (10.5% / 18%)'."""
+    if not c.igv_tasas:
+        return 'IGV'
+    tasas = ' / '.join(f'{fmt_pct(t)}%' for t in c.igv_tasas)
+    return f'IGV ({tasas})'
+
+
+def tasa_igv_texto(c: Comprobante) -> str:
+    """Para el Excel: '18', '10.5', '10.5 / 18' o vacío si no tiene IGV."""
+    return ' / '.join(fmt_pct(t) for t in c.igv_tasas)
 
 
 # ============================================================
@@ -919,9 +989,11 @@ def generar_pdf(c: Comprobante, destino: Path, carpeta_rel: str = '', mi_ruc: st
         cw = [8 * mm, 13 * mm, 16 * mm, 17 * mm, None, 17 * mm, 17 * mm, 13 * mm, 15 * mm, 19 * mm]
         cw[4] = ancho - sum(w for w in cw if w)
         rows = []
+        tasas_mixtas = len(c.igv_tasas) > 1   # solo entonces vale la pena marcar la tasa de cada línea
         for l in c.lineas:
+            tag_tasa = f' [IGV {fmt_pct(l.igv_porcentaje)}%]' if tasas_mixtas and l.igv_porcentaje else ''
             rows.append([_p(l.nro, S_CELL), _p(fmt_qty(l.cantidad), S_CELL_R), _p(l.unidad, S_CELL), _p(l.codigo, S_CELL),
-                         _p(l.descripcion + (f' (ISC {fmt(l.isc)})' if l.isc else '') + _afect(l.afectacion), S_CELL),
+                         _p(l.descripcion + (f' (ISC {fmt(l.isc)})' if l.isc else '') + _afect(l.afectacion) + tag_tasa, S_CELL),
                          _p(fmt(l.valor_unitario, 4 if l.valor_unitario and l.valor_unitario < 1 else 2), S_CELL_R),
                          _p(fmt(l.precio_unitario), S_CELL_R), _p(fmt(l.descuento) if l.descuento else '', S_CELL_R),
                          _p(fmt(l.igv), S_CELL_R), _p(fmt(l.valor_venta), S_CELL_R)])
@@ -950,7 +1022,7 @@ def generar_pdf(c: Comprobante, destino: Path, carpeta_rel: str = '', mi_ruc: st
     if not c.igv and not c.exoneradas and not c.inafectas:
         fila('Valor de venta', c.valor_venta, siempre=True)
     fila('ISC', c.isc)
-    fila('IGV (18%)' if c.igv else 'IGV', c.igv, siempre=True)
+    fila(etiqueta_igv(c), c.igv, siempre=True)   # tasa real del XML, no 18% fijo
     fila('ICBPER', c.icbper)
     fila('Otros cargos', c.otros_cargos)
     fila('Otros tributos', c.otros_tributos)
@@ -969,6 +1041,9 @@ def generar_pdf(c: Comprobante, destino: Path, carpeta_rel: str = '', mi_ruc: st
         izq_txt.append(_p(ley, S_SMALL))
     for ob in c.observaciones:
         izq_txt.append(_p(f'Observación: {ob}', S_SMALL))
+    if c.igv_tasa_calculada:
+        izq_txt.append(_p(f'Nota: el XML no declara el porcentaje de IGV; la tasa {fmt_pct(c.igv_tasas[0])}% '
+                          f'se calculó como IGV / Op. Gravadas.', S_SMALL))
     if c.cuotas:
         izq_txt.append(Spacer(1, 2 * mm))
         izq_txt.append(_p('Cuotas de pago:', S_BOLD))
@@ -1056,7 +1131,7 @@ def a_fila_resumen(c: Comprobante, carpeta: str, pdf: str, alerta_fecha: bool, d
         'Tipo': c.tipo_documento, 'Categoria': c.categoria or '', 'Moneda': c.moneda, 'Serie / Numero': c.serie_numero,
         'Fecha Emision': c.fecha_emision, 'Fecha Vencimiento': c.fecha_vencimiento, 'Forma Pago': c.forma_pago,
         'Base Gravada': float(c.gravadas), 'Exonerado': float(c.exoneradas), 'Inafecto': float(c.inafectas),
-        'IGV': float(c.igv), 'ISC': float(c.isc), 'ICBPER': float(c.icbper), 'Monto Total': float(c.importe_total),
+        '% IGV': tasa_igv_texto(c), 'IGV': float(c.igv), 'ISC': float(c.isc), 'ICBPER': float(c.icbper), 'Monto Total': float(c.importe_total),
         'Tiene IGV': c.tiene_igv, 'Tiene Detraccion': c.tiene_detraccion, '% Detraccion': float(c.detraccion_porcentaje), 'Monto Detraccion': float(c.detraccion_monto),
         'Tiene Percepcion': c.tiene_percepcion, 'Monto Percepcion': float(c.percepcion_monto), 'Total con Percepcion': float(c.percepcion_total) if c.tiene_percepcion else '',
         'Nro Items': len(c.lineas), 'Cliente RUC': c.doc_cliente, 'Cliente': c.nombre_cliente,

@@ -47,3 +47,10 @@ las fotos/PDF:
    mande a restaurantes a un comercio de productos.
 
 Las palabras admiten `*` al final como prefijo: `POLLERI*` cubre POLLERIA y POLLERIAS.
+
+## Tasa de IGV en el PDF generado
+El renglón de IGV muestra la tasa que declara el XML (`cbc:Percent`), no un 18% fijo:
+`IGV (18%)`, `IGV (10.5%)` (tasa reducida de restaurantes/hoteles) o `IGV (10.5% / 18%)`
+si la factura mezcla tasas; en ese caso cada línea lleva su tasa entre corchetes.
+Si el emisor no declara el porcentaje, se calcula IGV / Op. Gravadas y el PDF lo indica en una nota.
+El Excel tiene la columna `% IGV`.
